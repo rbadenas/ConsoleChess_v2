@@ -1,134 +1,21 @@
 ﻿using ConsoleChess.pieces;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace ConsoleChess
 {
     public class Square
     {
-        public static readonly Interval LIMITS = new Interval(0, Board.SIZE - 1);
-
-        private readonly int row;
-        private readonly int column;
+        private readonly Coordinate coordinte;
         private readonly int index;
         private readonly string name;
-
         private Piece piece;
-
 
         public Square(int row, int column)
         {
-            this.row = row;
-            this.column = column;
+            this.coordinte = new Coordinate(column, row);
+
             this.piece = null;
             this.index = Board.SIZE * row + column;
             this.name = "" + ((char)(column + 65)) + (row + 1);
-        }
-
-
-        public int Row() => this.row;
-        public int Column() => this.column;
-        public int GetIndex() => this.index;
-        public Piece GetPiece() => this.piece;
-        
-
-
-
-        
-        public Direction GetDirectionWith(Square other)
-        {
-            Debug.Assert(other != null);
-            if (IsAtSameColumn(other) && IsMinorRow(other)) return Direction.NORTH;
-            if (IsAtSameColumn(other) && !IsMinorRow(other)) return Direction.SOUTH;
-
-            if (IsAtSameRow(other) && IsMinorColumn(other)) return Direction.EAST;
-            if (IsAtSameRow(other) && !IsMinorColumn(other)) return Direction.WEST;
-
-            if (IsAtSameDiagonal(other) && IsMinorRow(other)) return Direction.NORTHEAST;
-            if (IsAtSameDiagonal(other) && !IsMinorRow(other)) return Direction.SOUTHEAST;
-
-            if (IsAtSameReverseDiagonal(other) && IsMinorRow(other)) return Direction.NORTHWEST;
-            if (IsAtSameReverseDiagonal(other) && !IsMinorRow(other)) return Direction.SOUTHWEST;
-
-            if (IsAtHorseJump(other)) return Direction.KNIGHT_JUMP;
-
-            return Direction.NONE;
-        }
-
-        public int RowDistance(Square other)
-        {
-            return other.row - this.row;
-        }
-
-        public int ColumnDistance(Square other)
-        {
-            return other.column - this.column;
-        }
-
-        public int MaxDistanceWith(Square other)
-        {
-            return Math.Max(Math.Abs(RowDistance(other)), Math.Abs(ColumnDistance(other)));
-        }
-
-
-        public void Display()
-        {
-            var console = new ConsoleIO();
-
-            if (piece != null)
-                console.Out("[" + piece.ToString() + "]");
-            else
-                console.Out("[ ]");
-        }
-
-
-        public override string ToString()
-        {
-            if (piece != null)
-                return "[" + piece.ToString() + "]";
-
-            return "[ ]";
-        }
-
-        public void DisplayFriendlyCoordinate()
-        {
-            new ConsoleIO().Out(FriendlyCoordinate() + " ");
-        }
-
-        public string FriendlyCoordinate()
-        {
-            return "" + ((char)(column + 65)) + (row + 1);
-        }
-
-        public Square GetUnitVector(Square other)
-        {
-
-            var direction = this.GetDirectionWith(other);
-
-            int row = 0;
-            int col = 0;
-
-            if (direction == Direction.NORTH || direction == Direction.NORTHEAST || direction == Direction.NORTHWEST) { row++; }
-            if (direction == Direction.SOUTH || direction == Direction.SOUTHEAST || direction == Direction.SOUTHWEST) { row--; }
-
-            if (direction == Direction.EAST || direction == Direction.NORTHEAST || direction == Direction.SOUTHEAST) { col++; }
-            if (direction == Direction.WEST || direction == Direction.NORTHWEST || direction == Direction.SOUTHWEST) { col--; }
-
-            return new Square(row, col);
-        }
-
-        public Square Displaced(Square displacement)
-        {
-            return new Square(this.row + displacement.row, this.column + displacement.column);
-        }
-
-
-
-
-        public bool Equals(Square other)
-        {
-            return this.row == other.row && this.column == other.column;
         }
 
         public void PutPiece(Piece piece)
@@ -139,6 +26,16 @@ namespace ConsoleChess
         public void RemovePiece()
         {
             this.piece = null;
+        }
+
+        public void Display()
+        {
+            var console = new ConsoleIO();
+
+            if (piece != null)
+                console.Out("[" + piece.ToString() + "]");
+            else
+                console.Out("[ ]");
         }
 
         public bool IsEmpty()
@@ -153,52 +50,47 @@ namespace ConsoleChess
 
         public bool IsValid()
         {
-            return LIMITS.Includes(row) && LIMITS.Includes(column);
+            return 0 <= this.Column() && this.Column() <= Board.SIZE - 1
+                && 0 <= this.Row() && this.Row() <= Board.SIZE - 1;
         }
 
-        #region PRIVATE
-
-
-        private bool IsAtSameColumn(Square other)
+        public Direction GetDirectionWith(Square other)
         {
-            return other.column == this.column;
+            return this.coordinte.GetDirectionWith(Square.ToCoordinate(other));
         }
-        private bool IsAtSameRow(Square other)
+
+        public Square GetUnitVector(Square other)
         {
-            return other.row == this.row;
+            var coordinate = Square.ToCoordinate(other);
+            return Coordinate.ToSquare(this.coordinte.GetUnitVector(coordinate));
         }
-        private bool IsAtSameDiagonal(Square other)
+
+        public Square Displaced(Square displacement)
         {
-            return Math.Abs(other.column - other.row) == Math.Abs(this.column - this.row);
+            var coordDisplacement = Square.ToCoordinate(displacement);
+            return Coordinate.ToSquare(this.coordinte.Displaced(coordDisplacement));
         }
-        private bool IsAtSameReverseDiagonal(Square other)
+
+        public int DistanceWith(Square other)
         {
-            return (other.row + other.column) == (this.row + this.column);
+            return this.coordinte.Distance(Square.ToCoordinate(other));
         }
-        private bool IsAtHorseJump(Square other)
+
+        public int Row() => this.coordinte.GetY();
+
+        public int Column() => this.coordinte.GetX();
+
+        public int GetIndex() => this.index;
+
+        public Piece GetPiece() => this.piece;
+
+        public string GetName() => this.name;
+
+        public static Coordinate ToCoordinate(Square square)
         {
-            var rowDistance = Math.Abs(RowDistance(other));
-            var colDistance = Math.Abs(ColumnDistance(other));
+            return new Coordinate(square.Column(), square.Row());
 
-            return rowDistance == 1 && colDistance == 2 || rowDistance == 2 && colDistance == 1;
         }
-
-        private bool IsMinorRow(Square other)
-        {
-            return other.row > this.row;
-        }
-        private bool IsMinorColumn(Square other)
-        {
-            return other.column > this.column;
-        }
-
-        
-
-
-        #endregion
-
-
-
 
     }
 }

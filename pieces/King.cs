@@ -2,15 +2,15 @@ namespace ConsoleChess.pieces
 {
     public class King : Piece
     {
-        public King(Color color, Board board) : base(Figure.KING, color, board)
+        public King(Color color) : base(Figure.KING, color)
         {
 
         }
 
-        protected override bool CanMoveTo(Square origin, Square destination)
+        public override bool CanMoveTo(Square origin, Square destination)
         {
             var direction = origin.GetDirectionWith(destination);
-            var distance = origin.MaxDistanceWith(destination);
+            var distance = origin.DistanceWith(destination);
 
             if ((Direction.NORTH == direction
                 || Direction.SOUTH == direction
@@ -26,6 +26,10 @@ namespace ConsoleChess.pieces
             return false;
         }
 
+        public override char Symbol()
+        {
+            return 'K';
+        }
 
     }
 }

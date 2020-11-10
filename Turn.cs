@@ -5,9 +5,9 @@ namespace ConsoleChess
         private readonly Player[] players;
         private int currentPlayerIndex;
 
-        public Turn(Board board)
+        public Turn()
         {
-            this.players = new Player[] { new Player(Color.WHITE, board), new Player(Color.BLACK, board) };
+            this.players = new Player[] { new Player(Color.WHITE), new Player(Color.BLACK) };
             this.currentPlayerIndex = 1;
         }
 
@@ -17,14 +17,19 @@ namespace ConsoleChess
             this.Display();
         }
 
-        public Player CurrentPlayer()
+        public Player Current()
         {
             return players[currentPlayerIndex];
         }
 
         public void Display()
         {
-            new ConsoleIO().Line(CurrentPlayer().ToString() + " moves!\n");
+            new ConsoleIO().Line(Current().ToString() + " moves!\n");
+        }
+
+        public void CongratulateWinner()
+        {
+            new ConsoleIO().Line("Congratulations " + Current().GetColor().ToString() + " player!! You've WON!!!");
         }
 
     }

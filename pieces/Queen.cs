@@ -2,12 +2,12 @@ namespace ConsoleChess.pieces
 {
     public class Queen : Piece
     {
-        public Queen(Color color, Board board) : base(Figure.QUEEN, color, board)
+        public Queen(Color color) : base(Figure.QUEEN, color)
         {
 
         }
 
-        protected override bool CanMoveTo(Square origin, Square destination)
+        public override bool CanMoveTo(Square origin, Square destination)
         {
             var direction = origin.GetDirectionWith(destination);
 
@@ -22,6 +22,11 @@ namespace ConsoleChess.pieces
                 && !destination.HasAllyPiece(color)) return true;
 
             return false;
+        }
+
+        public override char Symbol()
+        {
+            return 'Q';
         }
 
     }

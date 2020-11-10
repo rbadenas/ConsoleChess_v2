@@ -2,11 +2,12 @@ namespace ConsoleChess.pieces
 {
     public class Bishop : Piece
     {
-        public Bishop(Color color, Board board) : base(Figure.BISHOP, color, board)
+        public Bishop(Color color) : base(Figure.BISHOP, color)
         {
 
         }
-        protected override bool CanMoveTo(Square origin, Square destination)
+
+        public override bool CanMoveTo(Square origin, Square destination)
         {
             var direction = origin.GetDirectionWith(destination);
 
@@ -19,6 +20,9 @@ namespace ConsoleChess.pieces
             return false;
         }
 
-
+        public override char Symbol()
+        {
+            return 'B';
+        }
     }
 }

@@ -5,6 +5,9 @@
         static void Main()
         {
             new Chess().Play();
+
+
+
         }
     }
 }

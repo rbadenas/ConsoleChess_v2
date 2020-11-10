@@ -9,7 +9,7 @@ namespace ConsoleChess
         public Chess()
         {
             this.board = new Board();
-            this.turn = new Turn(board);
+            this.turn = new Turn();
         }
 
         public void Play()
@@ -18,10 +18,10 @@ namespace ConsoleChess
             {
                 board.Display();
                 turn.Next();
-                turn.CurrentPlayer().Play();
-            } while (!turn.CurrentPlayer().HasWon());
+                turn.Current().Play(board);
+            } while (!turn.Current().HasWon());
 
-            turn.CurrentPlayer().CongratulateWinner();
+            turn.CongratulateWinner();
         }
 
     }

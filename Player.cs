@@ -1,84 +1,58 @@
-using ConsoleChess.pieces;
-using System.Linq;
-
 namespace ConsoleChess
 {
     public class Player
     {
         private readonly Color color;
-        private readonly Board board;
         private bool hasWon;
 
-        public Player(Color color, Board board)
+        public Player(Color color)
         {
             this.color = color;
-            this.board = board;
             this.hasWon = false;
         }
 
-
-        public void Play()
+        public void Play(Board board)
         {
-            Square origin;
-            Square destination;
-            bool isLegalMovement;
-            do
-            {
-                origin = ReadSquare("Origin square", true);
-                destination = ReadSquare("Destination square", false);
-                isLegalMovement = origin.GetPiece().IsLegalMovement(origin, destination);
-
-                if (!isLegalMovement) { new ConsoleIO().Line("Not a valid movement\n\n"); }
-
-            } while (!isLegalMovement);
-
-
-            if (!destination.IsEmpty() && destination.GetPiece().GetType() == typeof(King))
-            {
-                this.hasWon = true;
-            }
-
-            this.Move(origin, destination);
-        }
-
-        public bool HasWon() => hasWon;
-
-        private void Move(Square origin, Square destination)
-        {
-            destination.RemovePiece();
-            destination.PutPiece(origin.GetPiece());
-            origin.RemovePiece();
-        }
-
-        private Square ReadSquare(string promptText, bool isOrigin)
-        {
-            var console = new ConsoleIO();
-            string input;
-            Square square;
-            bool isValid;
+            Movement movement;
 
             do
             {
-                input = console.InString(promptText + ": ");
-                square = board.Squares().Where(x => x.FriendlyCoordinate() == input.ToUpper()).FirstOrDefault();
+                var origin = ReadSquare("Origin square", board);
+                var destination = ReadSquare("Destination square", board);
+                var freePath = board.IsFreePathBetween(origin, destination);
 
-                isValid = square != null && square.IsValid() && (square.HasAllyPiece(color) == isOrigin);
-                if (!isValid) { console.Line(promptText + " is not valid\n\n"); }
+                movement = new Movement(origin, destination, freePath);
+                movement.Display();
 
-            } while (!isValid);
+            } while (!movement.IsLegal());
 
-            return square;
+            this.hasWon = movement.WillCheckMate();
+
+            movement.Execute();
         }
-
-        public void CongratulateWinner()
-        {
-            new ConsoleIO().Line("Congratulations " + color.ToString() + " player!! You've WON!!!");
-        }
-
 
         public override string ToString()
         {
             return color.ToString();
+        }
+
+        public bool HasWon() => hasWon;
+
+        public Color GetColor() => color;
+
+        private Square ReadSquare(string promptText, Board board)
+        {
+            var console = new ConsoleIO();
+            string input;
+            Square square;
+
+            do
+            {
+                input = console.InString(promptText + ": ");
+                square = board.SearchSquareByFriendyName(input);
+            } while (square == null || !square.IsValid());
+
+            return square;
         }
 
     }

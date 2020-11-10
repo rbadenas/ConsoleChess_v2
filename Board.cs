@@ -1,5 +1,7 @@
 using ConsoleChess.pieces;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ConsoleChess
 {
@@ -15,22 +17,6 @@ namespace ConsoleChess
             PlacePieces();
         }
 
-        public List<Square> Squares() => squares;
-
-        public static List<string> GetAllSquareNames()
-        {
-            var result = new List<string>();
-
-            for (int i = 0; i < Board.SIZE; i++)
-            {
-                for (int j = 0; j < Board.SIZE; j++)
-                {
-                    result.Add("" + ((char)(j + 65)) + (i + 1));
-                }
-            }
-            return result;
-        }
-
         public void Display()
         {
             var console = new ConsoleIO();
@@ -42,7 +28,7 @@ namespace ConsoleChess
                 DisplayRowLabels(i + 1);
                 for (int j = 0; j < SIZE; j++)
                 {
-                    GetSquareByID(SIZE * i + j).Display();
+                    GetSquare(SIZE * i + j).Display();
                 }
                 console.Line("");
             }
@@ -50,23 +36,41 @@ namespace ConsoleChess
             DisplayColumnLabels();
         }
 
+        public bool IsFreePathBetween(Square origin, Square destination)
+        {
+            var direction = origin.GetDirectionWith(destination);
 
-        public Square GetSquareByID(int index)
+            if (Direction.NONE == direction) return false;
+            if (Direction.KNIGHT_JUMP == direction) return true;
+
+            var distance = origin.DistanceWith(destination);
+            var unitVector = origin.GetUnitVector(destination);
+            var last = origin;
+
+            for (int i = 1; i < distance; i++)
+            {
+                var square = last.Displaced(unitVector);
+
+                if (!square.IsValid() || !this.GetSquare(square.GetIndex()).IsEmpty())
+                {
+                    return false;
+                }
+                last = square;
+            }
+
+            return true;
+        }
+
+        public Square SearchSquareByFriendyName(string name)
+        {
+            return squares.Where(x => x.GetName() == name.ToUpper()).FirstOrDefault();
+        }
+
+        private Square GetSquare(int index)
         {
             return squares[index];
         }
 
-
-        #region PRIVATE
-
-        private void PlacePieces()
-        {
-            PlacePawns();
-            PlaceRooks();
-            PlaceKnights();
-            PlaceBishops();
-            PlaceRoyalty();
-        }
         private void BuildSquares()
         {
             for (int i = 0; i < SIZE; i++)
@@ -77,47 +81,32 @@ namespace ConsoleChess
                 }
             }
         }
-        private void PlacePawns()
+
+        private void PlacePieces()
         {
             for (int i = SIZE; i < SIZE + SIZE; i++)
             {
-                this.GetSquareByID(i + 0 * SIZE).PutPiece(new WhitePawn(this));
-                this.GetSquareByID(i + 5 * SIZE).PutPiece(new BlackPawn(this));
+                this.GetSquare(i + 0 * SIZE).PutPiece(new Pawn(Color.WHITE));
+                this.GetSquare(i + 5 * SIZE).PutPiece(new Pawn(Color.BLACK));
             }
-        }
-        private void PlaceRooks()
-        {
-            this.GetSquareByID(0).PutPiece(new Rook(Color.WHITE, this));
-            this.GetSquareByID(7).PutPiece(new Rook(Color.WHITE, this));
-            this.GetSquareByID(56).PutPiece(new Rook(Color.BLACK, this));
-            this.GetSquareByID(63).PutPiece(new Rook(Color.BLACK, this));
-        }
-        private void PlaceKnights()
-        {
-            this.GetSquareByID(1).PutPiece(new Knight(Color.WHITE, this));
-            this.GetSquareByID(6).PutPiece(new Knight(Color.WHITE, this));
-            this.GetSquareByID(57).PutPiece(new Knight(Color.BLACK, this));
-            this.GetSquareByID(62).PutPiece(new Knight(Color.BLACK, this));
-        }
-        private void PlaceBishops()
-        {
-            this.GetSquareByID(2).PutPiece(new Bishop(Color.WHITE, this));
-            this.GetSquareByID(5).PutPiece(new Bishop(Color.WHITE, this));
-            this.GetSquareByID(58).PutPiece(new Bishop(Color.BLACK, this));
-            this.GetSquareByID(61).PutPiece(new Bishop(Color.BLACK, this));
-        }
-        private void PlaceRoyalty()
-        {
-            this.GetSquareByID(3).PutPiece(new Queen(Color.WHITE, this));
-            this.GetSquareByID(4).PutPiece(new King(Color.WHITE, this));
-            this.GetSquareByID(59).PutPiece(new Queen(Color.BLACK, this));
-            this.GetSquareByID(60).PutPiece(new King(Color.BLACK, this));
+            for (int i = 0; i < Enum.GetValues(typeof(Color)).Length; i++)
+            {
+                this.GetSquare(0 + i * 7 * SIZE).PutPiece(new Rook((Color)i));
+                this.GetSquare(1 + i * 7 * SIZE).PutPiece(new Knight((Color)i));
+                this.GetSquare(2 + i * 7 * SIZE).PutPiece(new Bishop((Color)i));
+                this.GetSquare(3 + i * 7 * SIZE).PutPiece(new Queen((Color)i));
+                this.GetSquare(4 + i * 7 * SIZE).PutPiece(new King((Color)i));
+                this.GetSquare(5 + i * 7 * SIZE).PutPiece(new Bishop((Color)i));
+                this.GetSquare(6 + i * 7 * SIZE).PutPiece(new Knight((Color)i));
+                this.GetSquare(7 + i * 7 * SIZE).PutPiece(new Rook((Color)i));
+            }
         }
 
         private void DisplayRowLabels(int row)
         {
             new ConsoleIO().Out("  " + row + " ");
         }
+
         private void DisplayColumnLabels()
         {
             string labelsLine = string.Empty;
@@ -130,8 +119,5 @@ namespace ConsoleChess
             new ConsoleIO().Line("     " + labelsLine + "\n");
         }
 
-
-        #endregion
     }
 }
-
